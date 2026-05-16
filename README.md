@@ -1,101 +1,75 @@
 # LLM Code Copilot
 
-A lightweight starter repository for experimenting with a code-copilot style workflow powered by a self-hosted LLM endpoint.
+A local-first starter repository for a code-copilot style workflow powered by a self-hosted LLM endpoint (no Colab required).
 
-Today this repo is centered on a Colab notebook (`services/llm_host_colab.ipynb`) that launches an inference endpoint using `llama.cpp`, then exposes it through `ngrok` for remote access.
-
----
-
-## Why this refactor?
-
-The original repository had useful intent but minimal project structure. This refactor adds:
-
-- clearer documentation,
-- basic dependency and environment setup,
-- standard ignore rules for notebook/Python work.
-
-This keeps the repository beginner-friendly while making it easier to evolve into a more maintainable project.
-
----
-
-## Current Project Structure
+## Project Structure
 
 ```text
 .
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
+├── configs/
+│   └── example.env
+├── docs/
+│   └── non-colab-setup.md
+├── scripts/
+│   └── run_api.sh
 └── services/
+    ├── api/
+    │   └── main.py
     └── llm_host_colab.ipynb
 ```
 
----
+## What Changed
 
-## What this project does
+This refactor introduces a non-Colab path:
 
-- Spins up an LLM inference process from a notebook environment.
-- Exposes an HTTP endpoint through a secure tunnel.
-- Enables editor-side integrations (for example, a VS Code extension) to call that endpoint.
+- A FastAPI gateway (`/health`, `/generate`) in `services/api/main.py`.
+- A local run script (`scripts/run_api.sh`).
+- Example environment config (`configs/example.env`).
+- Local setup guide (`docs/non-colab-setup.md`).
 
-> Note: This is intended for learning and prototyping. Notebook + tunnel deployments are not production-grade serving infrastructure.
+The notebook remains for legacy experimentation, but the default development path is now local and scriptable.
 
----
+## Quick Start (Local)
 
-## Quick Start
+1. Create and activate a virtual environment:
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-fork-or-repo-url>
-   cd LLM-Code-Copilot
-   ```
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
 
-2. **Create a Python environment (optional but recommended)**
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   ```
+2. Install dependencies:
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-4. **Open and run notebook**
-   - Launch `services/llm_host_colab.ipynb` in Colab (or compatible Jupyter environment).
-   - Follow notebook cells to:
-     - fetch / load model artifacts,
-     - start inference endpoint,
-     - expose endpoint through ngrok,
-     - copy endpoint URL for client integrations.
+3. Configure upstream LLM server:
 
----
+```bash
+cp configs/example.env .env
+# Edit LLM_BASE_URL if needed
+```
 
-## Model Notes
+4. Run API:
 
-The notebook flow is compatible with llama.cpp-backed models and can be adapted to different model families/quantizations (the earlier version referenced Zephyr-7B via TheBloke).
+```bash
+./scripts/run_api.sh
+```
 
-When changing models, verify:
+5. Validate:
 
-- prompt formatting,
-- context window,
-- tokenizer compatibility,
-- memory and latency constraints of the runtime.
+```bash
+curl -s http://127.0.0.1:8000/health
+curl -s http://127.0.0.1:8000/generate \
+  -H 'content-type: application/json' \
+  -d '{"prompt":"write a python hello world","max_tokens":64,"temperature":0.2}'
+```
 
----
+## Notes
 
-## Recommended Next Refactors
-
-If you continue evolving this project, a good next step is to split responsibilities:
-
-- `services/` for serving/runtime code,
-- `clients/` for editor or extension clients,
-- `configs/` for model/runtime presets,
-- `docs/` for architecture and troubleshooting.
-
-Then move notebook logic into scriptable modules so the same flow can run outside Colab.
-
----
-
-## Disclaimer
-
-Use this repository for educational and prototyping purposes. For production systems, prefer managed infrastructure with proper auth, rate limits, observability, deployment automation, and secret management.
+- `/generate` proxies to `{LLM_BASE_URL}/completion` in llama.cpp-compatible servers.
+- This repo is for local prototyping and integration experiments.
