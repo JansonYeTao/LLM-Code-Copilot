@@ -21,3 +21,14 @@ curl -s http://127.0.0.1:8000/generate \
   -H 'content-type: application/json' \
   -d '{"prompt":"write a python hello world","max_tokens":64,"temperature":0.2}'
 ```
+
+
+## 4) Test streaming
+
+```bash
+curl -N http://127.0.0.1:8000/generate \
+  -H 'content-type: application/json' \
+  -d '{"prompt":"stream me a short poem","max_tokens":64,"temperature":0.7,"stream":true}'
+```
+
+Expected response type is `text/event-stream` with `event: token` chunks and a final `event: done`.

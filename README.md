@@ -25,7 +25,7 @@ A local-first starter repository for a code-copilot style workflow powered by a 
 
 This refactor introduces a non-Colab path:
 
-- A FastAPI gateway (`/health`, `/generate`) in `services/api/main.py`.
+- A FastAPI gateway (`/health`, `/generate`) in `services/api/main.py` with optional SSE streaming support.
 - A local run script (`scripts/run_api.sh`).
 - Example environment config (`configs/example.env`).
 - Local setup guide (`docs/non-colab-setup.md`).
@@ -72,4 +72,5 @@ curl -s http://127.0.0.1:8000/generate \
 ## Notes
 
 - `/generate` proxies to `{LLM_BASE_URL}/completion` in llama.cpp-compatible servers.
+- Set `"stream": true` to get `text/event-stream` (SSE) responses with `token`, `error`, and `done` events.
 - This repo is for local prototyping and integration experiments.
