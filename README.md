@@ -1,18 +1,76 @@
 # LLM Code Copilot
 
+A local-first starter repository for a code-copilot style workflow powered by a self-hosted LLM endpoint (no Colab required).
 
+## Project Structure
 
-This repository contains a Jupyter Notebook that utilizes Large Language Models (LLMs) through endpoints. The implementation leverages llama.cpp for model inference and ngrok for secure tunneling, allowing you to easily access and interact with the model from any location with colab fee gpu.
+```text
+.
+├── README.md
+├── requirements.txt
+├── .gitignore
+├── configs/
+│   └── example.env
+├── docs/
+│   └── non-colab-setup.md
+├── scripts/
+│   └── run_api.sh
+└── services/
+    ├── api/
+    │   └── main.py
+    └── llm_host_colab.ipynb
+```
 
-## Model Used
-The base Jupyter Notebook is designed to work with the zephyr-7b model from TheBloke. This model provides a robust framework for exploring the capabilities of LLMs in a user-friendly environment.
+## What Changed
 
-## Features
-- Endpoint Integration: Seamlessly connect to LLM endpoints for real-time interactions (NoteL using colab notebook for set up rest service is not ok on production environments. This is purely for education purpose.).
-- Model Flexibility: Easily swap in different models as needed.
-- VSCode Extension: Includes a Visual Studio Code extension to offer copilot experience.
+This refactor introduces a non-Colab path:
 
+- A FastAPI gateway (`/health`, `/generate`) in `services/api/main.py` with optional SSE streaming support.
+- A local run script (`scripts/run_api.sh`).
+- Example environment config (`configs/example.env`).
+- Local setup guide (`docs/non-colab-setup.md`).
 
-## Getting Started
-1. Clone this repository.
-2. Launch the Jupyter Notebook and start code generation endpoint
+The notebook remains for legacy experimentation, but the default development path is now local and scriptable.
+
+## Quick Start (Local)
+
+1. Create and activate a virtual environment:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Configure upstream LLM server:
+
+```bash
+cp configs/example.env .env
+# Edit LLM_BASE_URL if needed
+```
+
+4. Run API:
+
+```bash
+./scripts/run_api.sh
+```
+
+5. Validate:
+
+```bash
+curl -s http://127.0.0.1:8000/health
+curl -s http://127.0.0.1:8000/generate \
+  -H 'content-type: application/json' \
+  -d '{"prompt":"write a python hello world","max_tokens":64,"temperature":0.2}'
+```
+
+## Notes
+
+- `/generate` proxies to `{LLM_BASE_URL}/completion` in llama.cpp-compatible servers.
+- Set `"stream": true` to get `text/event-stream` (SSE) responses with `token`, `error`, and `done` events.
+- This repo is for local prototyping and integration experiments.
